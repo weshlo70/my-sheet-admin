@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理者面板</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 50px; background: #f4f4f4; }
+    .login-box { max-width: 400px; margin: 0 auto; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
+    button { padding: 10px 20px; font-size: 16px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #1557b0; }
+    #content { display: none; margin-top: 30px; }
+    iframe { width: 100%; height: 600px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>管理者登入</h2>
+    <input type="password" id="password" placeholder="請輸入密碼">
+    <button onclick="login()">登入</button>
+    <p id="error" style="color:red; display:none;">密碼錯誤！</p>
+  </div>
+
+  <div id="content">
+    <h2>即時 Google Sheet 資料</h2>
+    <iframe id="sheetFrame"></iframe>
+    <br><br>
+    <button onclick="logout()">登出</button>
+  </div>
+
+  <script>
+    function login() {
+      const pwd = document.getElementById('password').value;
+      fetch('/api/check-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.valid) {
+          document.querySelector('.login-box').style.display = 'none';
+          document.getElementById('content').style.display = 'block';
+          document.getElementById('sheetFrame').src = 
+            'https://docs.google.com/spreadsheets/d/1yRsWqO4jR8U0S8HVCjfuLqKZdBeQMJXxxCNHP2DLR04/gviz/tq?tqx=out:html&tq=SELECT%20*&sheet=預約紀錄';  // 替換你的 Sheet ID 和工作表名
+        } else {
+          document.getElementById('error').style.display = 'block';
+        }
+      })
+      .catch(err => console.error('錯誤：', err));
+    }
+
+    function logout() {
+      document.querySelector('.login-box').style.display = 'block';
+      document.getElementById('content').style.display = 'none';
+      document.getElementById('password').value = '';
+      document.getElementById('error').style.display = 'none';
+      document.getElementById('sheetFrame').src = '';
+    }
+
+    // Enter 鍵登入
+    document.getElementById('password').addEventListener('keyup', e => { if (e.key === 'Enter') login(); });
+  </script>
+</body>
+</html>
